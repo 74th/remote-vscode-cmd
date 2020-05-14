@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+service Rcode {
+    rpc LaunchCode (LaunchRequest) returns (LaunchResponse) {}
+}
+
+message LaunchRequest {
+  string remote_host = 1;
+  repeated string args = 2;
+}
+
+message LaunchResponse {
+  int32 return_code = 3;
+  string message = 2;
+}
