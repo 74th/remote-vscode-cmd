@@ -17,7 +17,7 @@ type service struct {
 }
 
 func (s *service) LaunchCode(ctx context.Context, req *LaunchRequest) (*LaunchResponse, error) {
-	cmd := exec.Command(s.command, req.Args...)
+	cmd := exec.Command(s.command, "--folder-uri", "vscode-remote://ssh-remote+"+req.RemoteHost+"/"+req.Args[0])
 	err := cmd.Run()
 	if err != nil {
 		return &LaunchResponse{
@@ -53,8 +53,8 @@ func NewServer(host string, command string) {
 }
 
 type RcodeConf struct {
-	host       string `yaml:host`
-	remoteHost string `yaml:remote_host`
+	Host       string `yaml:host`
+	RemoteHost string `yaml:remote_host`
 }
 
 func CallServer(args []string) {
@@ -72,14 +72,14 @@ func CallServer(args []string) {
 		panic(fmt.Sprintf("%s conf decode error: %s", confPath, err.Error()))
 	}
 
-	conn, err := grpc.Dial(conf.host)
+	conn, err := grpc.Dial(conf.Host)
 	if err != nil {
-		panic(fmt.Sprintf("could not connect %s : %s", conf.host, err.Error()))
+		panic(fmt.Sprintf("could not connect %s : %s", conf.Host, err.Error()))
 	}
 	client := NewRcodeClient(conn)
 	req := LaunchRequest{
 		Args:       args,
-		RemoteHost: conf.remoteHost,
+		RemoteHost: conf.RemoteHost,
 	}
 	res, err := client.LaunchCode(context.Background(), &req)
 	if len(res.Message) > 0 {
