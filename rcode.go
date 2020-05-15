@@ -3,6 +3,7 @@ package rcode
 import (
 	"context"
 	fmt "fmt"
+	"log"
 	"net"
 	"os"
 	"os/exec"
@@ -17,7 +18,9 @@ type service struct {
 }
 
 func (s *service) LaunchCode(ctx context.Context, req *LaunchRequest) (*LaunchResponse, error) {
-	cmd := exec.Command(s.command, "--folder-uri", "vscode-remote://ssh-remote+"+req.RemoteHost+"/"+req.Args[0])
+	log.Printf("host:%s args:%v", req.RemoteHost, req.Args)
+	args := append([]string{"--remote", "ssh-remote+" + req.RemoteHost}, req.Args...)
+	cmd := exec.Command(s.command, args...)
 	err := cmd.Run()
 	if err != nil {
 		return &LaunchResponse{

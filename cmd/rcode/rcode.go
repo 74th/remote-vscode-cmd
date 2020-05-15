@@ -17,6 +17,6 @@ func main() {
 	if isServer {
 		rcode.NewServer(addr, command)
 	} else {
-		rcode.CallServer(flag.Args())
+		rcode.CallServer(flag.Args()[1:])
 	}
 }
