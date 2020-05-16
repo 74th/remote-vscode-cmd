@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 
-	rcode "github.com/74th/remote-code-cmd"
+	rcode "github.com/74th/remote-vscode-cmd"
 )
 
 func main() {
@@ -17,6 +17,6 @@ func main() {
 	if isServer {
 		rcode.NewServer(addr, command)
 	} else {
-		rcode.CallServer(flag.Args()[1:])
+		rcode.CallServer(flag.Args())
 	}
 }

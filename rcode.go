@@ -18,8 +18,8 @@ type service struct {
 }
 
 func (s *service) LaunchCode(ctx context.Context, req *LaunchRequest) (*LaunchResponse, error) {
-	log.Printf("host:%s args:%v", req.RemoteHost, req.Args)
-	args := append([]string{"--remote", "ssh-remote+" + req.RemoteHost}, req.Args...)
+	log.Printf("host:%s args:%v", req.RemoteHostname, req.Args)
+	args := append([]string{"--remote", "ssh-remote+" + req.RemoteHostname}, req.Args...)
 	cmd := exec.Command(s.command, args...)
 	err := cmd.Run()
 	if err != nil {
@@ -39,6 +39,7 @@ func (s *service) LaunchCode(ctx context.Context, req *LaunchRequest) (*LaunchRe
 	return &LaunchResponse{}, nil
 }
 
+// NewServer starts rcode server
 func NewServer(host string, command string) {
 	srv := &service{
 		command: command,
@@ -56,8 +57,8 @@ func NewServer(host string, command string) {
 }
 
 type RcodeConf struct {
-	Host       string `yaml:host`
-	RemoteHost string `yaml:remote_host`
+	Client         string `yaml:"client"`
+	RemoteHostname string `yaml:"remote_hostname"`
 }
 
 func CallServer(args []string) {
@@ -74,15 +75,16 @@ func CallServer(args []string) {
 	if err != nil {
 		panic(fmt.Sprintf("%s conf decode error: %s", confPath, err.Error()))
 	}
+	fmt.Printf("calling %s as %s with args: %s", conf.Client, conf.RemoteHostname, args)
 
-	conn, err := grpc.Dial(conf.Host)
+	conn, err := grpc.Dial(conf.Client, grpc.WithInsecure())
 	if err != nil {
-		panic(fmt.Sprintf("could not connect %s : %s", conf.Host, err.Error()))
+		panic(fmt.Sprintf("could not connect %s : %s", conf.Client, err.Error()))
 	}
 	client := NewRcodeClient(conn)
 	req := LaunchRequest{
-		Args:       args,
-		RemoteHost: conf.RemoteHost,
+		Args:           args,
+		RemoteHostname: conf.RemoteHostname,
 	}
 	res, err := client.LaunchCode(context.Background(), &req)
 	if len(res.Message) > 0 {

@@ -5,7 +5,7 @@ service Rcode {
 }
 
 message LaunchRequest {
-  string remote_host = 1;
+  string remote_hostname = 1;
   repeated string args = 2;
 }
 
