@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"time"
 
 	"google.golang.org/grpc"
 	"gopkg.in/yaml.v2"
@@ -41,16 +42,24 @@ func (s *service) LaunchCode(ctx context.Context, req *LaunchRequest) (*LaunchRe
 
 // NewServer starts rcode server
 func NewServer(host string, command string) {
+
 	srv := &service{
 		command: command,
 	}
-	conn, err := net.Listen("tcp", host)
-	if err != nil {
-		panic(fmt.Sprintf("failed to listen %s: %s", host, err.Error()))
+
+	var listener net.Listener
+	for {
+		var err error
+		listener, err = net.Listen("tcp", host)
+		if err == nil {
+			break
+		}
+		fmt.Sprintf("failed to listen %s: %s\n", host, err.Error())
+		time.Sleep(5 * time.Second)
 	}
 	grpcServer := grpc.NewServer()
 	RegisterRcodeServer(grpcServer, srv)
-	err = grpcServer.Serve(conn)
+	err := grpcServer.Serve(listener)
 	if err != nil {
 		panic(fmt.Sprintf("failed to start: %s", err.Error()))
 	}
