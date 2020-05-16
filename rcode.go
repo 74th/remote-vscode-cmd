@@ -19,7 +19,7 @@ type service struct {
 }
 
 func (s *service) LaunchCode(ctx context.Context, req *LaunchRequest) (*LaunchResponse, error) {
-	log.Printf("host:%s args:%v", req.RemoteHostname, req.Args)
+	log.Printf("called host:%s args:%v", req.RemoteHostname, req.Args)
 	args := append([]string{"--remote", "ssh-remote+" + req.RemoteHostname}, req.Args...)
 	cmd := exec.Command(s.command, args...)
 	err := cmd.Run()
@@ -84,7 +84,15 @@ func CallServer(args []string) {
 	if err != nil {
 		panic(fmt.Sprintf("%s conf decode error: %s", confPath, err.Error()))
 	}
-	fmt.Printf("calling %s as %s with args: %s", conf.Client, conf.RemoteHostname, args)
+
+	cwd, _ := os.Getwd()
+	for i := range args {
+		p := path.Join(cwd, args[i])
+		if _, err := os.Stat(p); err == nil {
+			args[i] = p
+		}
+	}
+	fmt.Printf("calling %s as %s with args: %s\n", conf.Client, conf.RemoteHostname, args)
 
 	conn, err := grpc.Dial(conf.Client, grpc.WithInsecure())
 	if err != nil {
