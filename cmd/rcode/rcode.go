@@ -10,7 +10,7 @@ import (
 var Opts struct {
 	IsServer bool   `long:"server" description:"launch server"`
 	Addr     string `long:"addr" description:"server addr (127.0.0.1:5653)"`
-	Command  string `long:"command" description:"launch server" default:"code"`
+	Command  string `long:"command" description:"executed command" default:""`
 	AllowAny bool   `long:"allow-any" description:"allow any command"`
 }
 
@@ -20,6 +20,10 @@ func main() {
 		os.Exit(1)
 	}
 	if Opts.IsServer {
+		if Opts.Command == "" {
+			Opts.Command = "code"
+		}
+
 		rcode.NewServer(Opts.Addr, Opts.Command, Opts.AllowAny)
 	} else {
 		rcode.CallServer(Opts.Command, args)
