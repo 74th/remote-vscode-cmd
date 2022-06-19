@@ -1,22 +1,27 @@
 package main
 
 import (
-	"flag"
+	"os"
 
 	rcode "github.com/74th/remote-vscode-cmd"
+	"github.com/jessevdk/go-flags"
 )
 
+var Opts struct {
+	IsServer bool   `long:"server" description:"launch server"`
+	Addr     string `long:"addr" description:"server addr (127.0.0.1:5653)"`
+	Command  string `long:"command" description:"launch server" default:"code"`
+	AllowAny bool   `long:"allow-any" description:"allow any command"`
+}
+
 func main() {
-	var isServer bool
-	var addr string
-	var command string
-	flag.BoolVar(&isServer, "server", false, "launch server")
-	flag.StringVar(&addr, "addr", "0.0.0.0:5450", "server addr")
-	flag.StringVar(&command, "command", "code-insiders", "command")
-	flag.Parse()
-	if isServer {
-		rcode.NewServer(addr, command)
+	args, err := flags.Parse(&Opts)
+	if err != nil {
+		os.Exit(1)
+	}
+	if Opts.IsServer {
+		rcode.NewServer(Opts.Addr, Opts.Command, Opts.AllowAny)
 	} else {
-		rcode.CallServer(flag.Args())
+		rcode.CallServer(Opts.Command, args)
 	}
 }

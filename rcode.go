@@ -15,13 +15,31 @@ import (
 )
 
 type service struct {
-	command string
+	UnimplementedRcodeServer
+	command         string
+	allowAnyCommand bool
 }
 
 func (s *service) LaunchCode(ctx context.Context, req *LaunchRequest) (*LaunchResponse, error) {
-	log.Printf("called host:%s args:%v", req.RemoteHostname, req.Args)
-	args := append([]string{"--remote", "ssh-remote+" + req.RemoteHostname}, req.Args...)
-	cmd := exec.Command(s.command, args...)
+	if req.Command != "" && !s.allowAnyCommand {
+		log.Printf("called host:%s command:%s args:%v, but do not allow any command execute", req.RemoteHostname, req.Command, req.Args)
+		return &LaunchResponse{
+			ReturnCode: int32(1),
+		}, nil
+
+	}
+	var command string
+	var args []string
+	if req.Command == "" {
+		log.Printf("called host:%s args:%v", req.RemoteHostname, req.Args)
+		command = s.command
+		args = append([]string{"--remote", "ssh-remote+" + req.RemoteHostname}, req.Args...)
+	} else {
+		log.Printf("called host:%s command:%s args:%v", req.RemoteHostname, req.Command, req.Args)
+		command = req.Command
+		args = req.Args
+	}
+	cmd := exec.Command(command, args...)
 	err := cmd.Run()
 	if err != nil {
 		return &LaunchResponse{
@@ -41,10 +59,11 @@ func (s *service) LaunchCode(ctx context.Context, req *LaunchRequest) (*LaunchRe
 }
 
 // NewServer starts rcode server
-func NewServer(host string, command string) {
+func NewServer(host string, command string, allowAnyCommand bool) {
 
 	srv := &service{
-		command: command,
+		command:         command,
+		allowAnyCommand: allowAnyCommand,
 	}
 
 	var listener net.Listener
@@ -70,7 +89,7 @@ type RcodeConf struct {
 	RemoteHostname string `yaml:"remote_hostname"`
 }
 
-func CallServer(args []string) {
+func CallServer(command string, args []string) {
 	home := os.Getenv("HOME")
 	confPath := path.Join(home, ".rcode.yaml")
 	f, err := os.Open(confPath)
@@ -103,7 +122,14 @@ func CallServer(args []string) {
 		Args:           args,
 		RemoteHostname: conf.RemoteHostname,
 	}
+	if command != "" {
+		req.Command = command
+	}
 	res, err := client.LaunchCode(context.Background(), &req)
+	if err != nil {
+		fmt.Print(err.Error())
+		os.Exit(1)
+	}
 	if len(res.Message) > 0 {
 		fmt.Print(res.Message)
 	}

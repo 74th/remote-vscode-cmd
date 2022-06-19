@@ -1,12 +1,15 @@
 syntax = "proto3";
 
+option go_package = "github.com/74th/remote-code-cmd/rcode";
+
 service Rcode {
-    rpc LaunchCode (LaunchRequest) returns (LaunchResponse) {}
+  rpc LaunchCode(LaunchRequest) returns (LaunchResponse) {}
 }
 
 message LaunchRequest {
   string remote_hostname = 1;
   repeated string args = 2;
+  string command = 3;
 }
 
 message LaunchResponse {
