@@ -19,7 +19,7 @@ This needs to be able to connect client host machine from remote host.
 Install rcode.
 
 ```
-go get github.com/74th/remote-vscode-cmd/cmd/rcode
+go install github.com/74th/remote-vscode-cmd/cmd/rcode@latest
 ```
 
 Create rcode.command file to launch rcode.
@@ -40,7 +40,7 @@ Setting to launch rcode.command. "System Preferences..." -> "Users & Groups" -> 
 Install rcode.
 
 ```
-go get github.com/74th/remote-vscode-cmd/cmd/rcode
+go install github.com/74th/remote-vscode-cmd/cmd/rcode@latest
 ```
 
 Create `/$HOME/.rcode.yaml` .
